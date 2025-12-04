@@ -1,0 +1,104 @@
+services:
+
+  zookeeper:
+    image: 'confluentinc/cp-zookeeper:7.9.5'
+    container_name: 'zookeeper'
+    ports:
+      - '2181:2181'
+    environment:
+      - 'ZOOKEEPER_CLIENT_PORT=2181'
+
+  kafka:
+    image: 'confluentinc/cp-kafka:7.9.5'
+    container_name: 'kafka'
+    depends_on:
+      - 'zookeeper'
+    ports:
+      - '9092:9092'
+      - '29092:29092'
+    environment:
+      - 'KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181'
+      - 'KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT'
+      - 'KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092'
+      - 'KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1'
+
+  kafdrop:
+    image: 'obsidiandynamics/kafdrop:4.2.0'
+    container_name: 'kafdrop'
+    depends_on:
+      - 'kafka'
+    ports:
+      - '9000:9000'
+    environment:
+      - 'KAFKA_BROKERCONNECT=kafka:9092'
+
+  rabbitmq:
+    image: 'rabbitmq:4.2.1-management'
+    container_name: 'rabbitmq'
+    ports:
+      - '5672:5672'
+      - '15672:15672'
+    environment:
+      - 'RABBITMQ_DEFAULT_USER=guest'
+      - 'RABBITMQ_DEFAULT_PASS=guest'
+
+  postgres:
+    image: 'postgres:18.0'
+    container_name: 'postgres'
+    ports:
+      - '5432:5432'
+    environment:
+      - 'POSTGRES_DB=newsdb'
+      - 'POSTGRES_PASSWORD=postgres'
+      - 'POSTGRES_USER=postgres'
+
+  news-app1:
+    image: 'news-app:1.0.0'
+    container_name: 'news-app1'
+    depends_on:
+      - 'rabbitmq'
+      - 'postgres'
+      - 'kafka'
+    environment:
+      - 'SPRING_RABBITMQ_HOST=rabbitmq'
+      - 'KAFKA_HOST=kafka'
+      - 'KAFKA_PORT=9092'
+      - 'POSTGRES_HOST=postgres'
+
+  news-app2:
+    image: 'news-app:1.0.0'
+    container_name: 'news-app2'
+    depends_on:
+      - 'rabbitmq'
+      - 'postgres'
+      - 'kafka'
+    environment:
+      - 'SPRING_RABBITMQ_HOST=rabbitmq'
+      - 'KAFKA_HOST=kafka'
+      - 'KAFKA_PORT=9092'
+      - 'POSTGRES_HOST=postgres'
+
+  news-app3:
+    image: 'news-app:1.0.0'
+    container_name: 'news-app3'
+    depends_on:
+      - 'rabbitmq'
+      - 'postgres'
+      - 'kafka'
+    environment:
+      - 'SPRING_RABBITMQ_HOST=rabbitmq'
+      - 'KAFKA_HOST=kafka'
+      - 'KAFKA_PORT=9092'
+      - 'POSTGRES_HOST=postgres'
+
+  nginx:
+    image: 'nginx:1.29.3'
+    container_name: 'nginx'
+    volumes:
+      - '$PWD/nginx/nginx.conf:/etc/nginx/nginx.conf:ro'
+    ports:
+      - '80:80'
+    depends_on:
+      - 'news-app1'
+      - 'news-app2'
+      - 'news-app3'

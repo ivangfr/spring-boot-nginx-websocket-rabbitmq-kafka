@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>News WebSocket</title>
+
+    <!-- Pico CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@latest/css/pico.min.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+
+    <style>
+        /* small custom tweaks on top of Pico */
+        main.container { max-width: 900px; margin: 1.5rem auto; }
+        .news-list { display: flex; flex-direction: column; gap: 0.75rem; }
+        .news-item { padding: 0.75rem; border-radius: 8px; background: var(--surface-1); display: flex; gap: 0.75rem; align-items: center; justify-content: space-between; }
+        .news-left { display:flex; flex-direction:column; gap:0.5rem; flex:1; }
+        .news-description { margin: 0; word-break: break-word; }
+        .controls { display:flex; gap:0.5rem; align-items:center; }
+        .reaction { font-weight: 600; color: var(--muted); min-width: 64px; text-align: center; }
+    </style>
+</head>
+<body>
+
+<main class="container">
+    <section>
+        <h1>Latest News</h1>
+        <div id="news" class="news-list" aria-live="polite"></div>
+    </section>
+</main>
+
+<script>
+    let stompClient = null;
+    let reconnectTimeout = null;
+
+    function connect() {
+        const socket = new SockJS('/ws');
+        stompClient = Stomp.over(socket);
+        stompClient.debug = null;
+
+        stompClient.connect({}, function () {
+            console.log('Connected to websocket');
+
+            stompClient.subscribe('/topic/news', function (message) {
+                const payload = JSON.parse(message.body);
+                const id = payload.id;
+                const description = payload.description;
+                renderNewsItem(id, description);
+            });
+
+            if (reconnectTimeout) {
+                clearTimeout(reconnectTimeout);
+                reconnectTimeout = null;
+            }
+        }, function (error) {
+            console.log('WebSocket connection error or closed. Attempting to reconnect in 3 seconds', error);
+            reconnectTimeout = setTimeout(connect, 1000);
+        });
+    }
+
+    function renderNewsItem(id, description) {
+        const container = document.getElementById('news');
+
+        const newsId = id;
+        const item = document.createElement('article');
+        item.className = 'news-item';
+        item.setAttribute('data-news-id', newsId);
+        item.setAttribute('data-news', description);
+
+        const left = document.createElement('div');
+        left.className = 'news-left';
+
+        const textEl = document.createElement('p');
+        textEl.className = 'news-description';
+        textEl.textContent = description;
+        left.appendChild(textEl);
+
+        item.appendChild(left);
+
+        const controls = document.createElement('div');
+        controls.className = 'controls';
+
+        const likeBtn = document.createElement('button');
+        likeBtn.className = 'contrast';
+        likeBtn.textContent = 'Like';
+
+        const dislikeBtn = document.createElement('button');
+        dislikeBtn.className = '';
+        dislikeBtn.textContent = 'Dislike';
+
+        likeBtn.onclick = () => sendReaction(newsId, 'LIKE', likeBtn, dislikeBtn);
+        dislikeBtn.onclick = () => sendReaction(newsId, 'DISLIKE', likeBtn, dislikeBtn);
+
+        controls.appendChild(likeBtn);
+        controls.appendChild(dislikeBtn);
+
+        const status = document.createElement('span');
+        status.className = 'reaction';
+        status.textContent = '';
+        controls.appendChild(status);
+
+        item.appendChild(controls);
+
+        // newest on top
+        container.prepend(item);
+    }
+
+    function sendReaction(newsId, reaction, likeBtn, dislikeBtn) {
+        if (!stompClient || !stompClient.connected) {
+            console.warn('Not connected, cannot send reaction');
+            return;
+        }
+        const payload = { id: Date.now(), newsId: newsId, reaction: reaction };
+        stompClient.send('/app/reaction', {}, JSON.stringify(payload));
+        likeBtn.disabled = true;
+        dislikeBtn.disabled = true;
+    }
+
+    window.onload = connect;
+</script>
+</body>
+</html>
