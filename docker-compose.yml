@@ -52,9 +52,9 @@ services:
       - 'POSTGRES_PASSWORD=postgres'
       - 'POSTGRES_USER=postgres'
 
-  news-app1:
+  news-app-1:
     image: 'news-app:1.0.0'
-    container_name: 'news-app1'
+    container_name: 'news-app-1'
     depends_on:
       - 'rabbitmq'
       - 'postgres'
@@ -65,9 +65,9 @@ services:
       - 'KAFKA_PORT=9092'
       - 'POSTGRES_HOST=postgres'
 
-  news-app2:
+  news-app-2:
     image: 'news-app:1.0.0'
-    container_name: 'news-app2'
+    container_name: 'news-app-2'
     depends_on:
       - 'rabbitmq'
       - 'postgres'
@@ -78,9 +78,9 @@ services:
       - 'KAFKA_PORT=9092'
       - 'POSTGRES_HOST=postgres'
 
-  news-app3:
+  news-app-3:
     image: 'news-app:1.0.0'
-    container_name: 'news-app3'
+    container_name: 'news-app-3'
     depends_on:
       - 'rabbitmq'
       - 'postgres'
@@ -99,6 +99,6 @@ services:
     ports:
       - '80:80'
     depends_on:
-      - 'news-app1'
-      - 'news-app2'
-      - 'news-app3'
+      - 'news-app-1'
+      - 'news-app-2'
+      - 'news-app-3'
