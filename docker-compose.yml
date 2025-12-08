@@ -7,6 +7,7 @@ services:
       - '2181:2181'
     environment:
       - 'ZOOKEEPER_CLIENT_PORT=2181'
+    restart: 'unless-stopped'
 
   kafka:
     image: 'confluentinc/cp-kafka:7.9.5'
@@ -21,6 +22,7 @@ services:
       - 'KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT'
       - 'KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092'
       - 'KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1'
+    restart: 'unless-stopped'
 
   kafdrop:
     image: 'obsidiandynamics/kafdrop:4.2.0'
@@ -31,6 +33,7 @@ services:
       - '9000:9000'
     environment:
       - 'KAFKA_BROKERCONNECT=kafka:9092'
+    restart: 'unless-stopped'
 
   rabbitmq:
     image: 'rabbitmq:4.2.1-management'
@@ -41,6 +44,7 @@ services:
     environment:
       - 'RABBITMQ_DEFAULT_USER=guest'
       - 'RABBITMQ_DEFAULT_PASS=guest'
+    restart: 'unless-stopped'
 
   postgres:
     image: 'postgres:18.0'
@@ -51,6 +55,7 @@ services:
       - 'POSTGRES_DB=newsdb'
       - 'POSTGRES_PASSWORD=postgres'
       - 'POSTGRES_USER=postgres'
+    restart: 'unless-stopped'
 
   news-app-1:
     image: 'news-app:1.0.0'
@@ -64,6 +69,7 @@ services:
       - 'KAFKA_HOST=kafka'
       - 'KAFKA_PORT=9092'
       - 'POSTGRES_HOST=postgres'
+    restart: 'unless-stopped'
 
   news-app-2:
     image: 'news-app:1.0.0'
@@ -77,6 +83,7 @@ services:
       - 'KAFKA_HOST=kafka'
       - 'KAFKA_PORT=9092'
       - 'POSTGRES_HOST=postgres'
+    restart: 'unless-stopped'
 
   news-app-3:
     image: 'news-app:1.0.0'
@@ -90,6 +97,7 @@ services:
       - 'KAFKA_HOST=kafka'
       - 'KAFKA_PORT=9092'
       - 'POSTGRES_HOST=postgres'
+    restart: 'unless-stopped'
 
   nginx:
     image: 'nginx:1.29.3'
@@ -102,3 +110,4 @@ services:
       - 'news-app-1'
       - 'news-app-2'
       - 'news-app-3'
+    restart: 'unless-stopped'
