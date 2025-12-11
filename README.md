@@ -6,6 +6,10 @@ This project shows how to implement an interactive news broadcasting app. A user
 
 On [ivangfr.github.io](https://ivangfr.github.io), I have compiled my Proof-of-Concepts (PoCs) and articles. You can easily search for the technology you are interested in by using the filter. Who knows, perhaps I have already implemented a PoC or written an article about what you are looking for.
 
+## Additional Readings
+
+- \[**Medium**\] [**Implementing an Interactive and Scalable News Broadcasting App**](https://medium.com/@ivangfr/implementing-an-interactive-and-scalable-news-broadcasting-app-333aa06ee2cd)
+
 ## Applications
 
 - ### news-app
