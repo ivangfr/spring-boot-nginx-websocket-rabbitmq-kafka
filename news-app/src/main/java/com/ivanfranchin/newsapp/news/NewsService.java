@@ -5,6 +5,8 @@ import com.ivanfranchin.newsapp.news.model.News;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @RequiredArgsConstructor
 @Service
 public class NewsService {
@@ -18,5 +20,9 @@ public class NewsService {
     public News validateAndGetNews(String newsId) {
         return newsRepository.findById(newsId)
                 .orElseThrow(() -> new NewsNotFoundException("News not found: " + newsId));
+    }
+
+    public List<News> getAllNews() {
+        return newsRepository.findAll();
     }
 }
