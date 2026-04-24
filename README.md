@@ -1,5 +1,8 @@
 # spring-boot-nginx-websocket-rabbitmq-kafka
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-ivan.franchin-FFDD00?logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/ivan.franchin)
+
 This project shows how to implement an interactive news broadcasting app. A user can post news using a REST API, and it gets sent out to users instantly through a live `WebSocket` connection. Users can react by liking or disliking the news, and the app keeps track of all those reactions to show the total likes and dislikes.
 
 ## Proof-of-Concepts & Articles
@@ -10,15 +13,40 @@ On [ivangfr.github.io](https://ivangfr.github.io), I have compiled my Proof-of-C
 
 - \[**Medium**\] [**Implementing an Interactive and Scalable News Broadcasting App**](https://medium.com/@ivangfr/implementing-an-interactive-and-scalable-news-broadcasting-app-333aa06ee2cd)
 
-## Applications
+## Application
 
 - ### news-app
 
   [`Spring Boot`](https://docs.spring.io/spring-boot/index.html) Java web app that provides a REST endpoint for publishing and broadcasting news. It also supports real-time broadcasting and user reactions through full-duplex [`WebSocket`](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API) channels. The app stores data in [`PostgreSQL`](https://www.postgresql.org/) and runs behind a [`Nginx`](https://nginx.org/index.html) load balancer. For broadcasting, it connects to [`RabbitMQ`](https://www.rabbitmq.com/), and user reactions are handled sequentially and partitioned by news ID using an [`Apache Kafka`](https://kafka.apache.org/) topic partition.
 
+  It has the following endpoints:
+  ```
+   GET /api/news
+   GET /api/news/{id}
+  POST /api/news {"description": "..."}
+   GET /actuator/health
+  ```
+
 ## Project Diagram
 
 ![project-diagram](documentation/project-diagram.png)
+
+## Architecture
+
+This app uses an **event-driven architecture** with four main components:
+
+- **Client (Browser)** — connects via WebSocket for real-time updates and reactions
+- **Nginx** — load balancer distributing traffic across Spring Boot instances
+- **Spring Boot** — REST API for publishing news, WebSocket for broadcasting
+- **PostgreSQL** — stores news and reaction counts
+- **RabbitMQ** — broadcasts news to all clients in real-time
+- **Kafka** — processes reactions sequentially, partitioned by news ID
+
+**Data Flow:**
+- `POST /api/news` → saves to PostgreSQL → broadcasts via RabbitMQ → WebSocket clients receive it
+- Client reaction (via WebSocket) → sent to Kafka → processed in order → saved to PostgreSQL
+
+For a detailed explanation, check out the [**Medium article**](https://medium.com/@ivangfr/implementing-an-interactive-and-scalable-news-broadcasting-app-333aa06ee2cd).
 
 ## Prerequisites
 
@@ -136,3 +164,17 @@ podman compose down -v
   ```text
   127.0.0.1 news-app.lb
   ```
+
+## How to optimize GIFs and PNGs in documentation folder
+
+\[**Medium**\] [**How I Reduce GIF and Screenshot Sizes for My Technical Articles on macOS**](https://medium.com/itnext/how-i-reduce-gif-and-screenshot-sizes-for-my-technical-articles-on-macos-7fea331afc68)
+
+## Support
+
+If you find this useful, consider buying me a coffee:
+
+<a href="https://buymeacoffee.com/ivan.franchin"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" height="50"></a>
+
+## License
+
+This project is licensed under the [MIT License](./LICENSE).
