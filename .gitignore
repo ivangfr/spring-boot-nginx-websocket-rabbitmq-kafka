@@ -1,5 +1,6 @@
 extracted
 extracted-spring-aot
+results-*.csv
 HELP.md
 target/
 .mvn/wrapper/maven-wrapper.jar

@@ -165,6 +165,42 @@ podman compose down -v
   127.0.0.1 news-app.lb
   ```
 
+## Startup Benchmarking
+
+This project includes tools to benchmark and compare different Spring Boot optimization techniques.
+
+> **Prerequisite**: Start the required Docker Compose services:
+> ```bash
+> podman compose up -d zookeeper kafka rabbitmq postgres
+> ```
+
+### Scripts
+
+- **`collect-rss-cputime-startup.sh`** — Starts the app and measures RSS memory, CPU time, and startup time.
+  ```bash
+  export JAVA_JAR_COMMAND="java -jar news-app/target/news-app-1.0.0.jar"
+  ./collect-rss-cputime-startup.sh
+  ```
+
+- **`benchmark.sh`** — Runs automated benchmarks comparing 5 configurations. Outputs a CSV file.
+  ```bash
+  ./benchmark.sh 3  # 3 runs per configuration
+  ```
+
+- **`benchmark-viewer.html`** — HTML viewer with charts to visualize CSV results. Open in a browser.
+
+- **`manual-steps.md`** — Reference guide with manual commands for each configuration.
+
+### Configurations Tested
+
+| Configuration | Description |
+|---------------|-------------|
+| Uber JAR | Standard executable JAR |
+| Extracted executable JAR | Self-extracting JAR |
+| CDS | Class Data Sharing |
+| AOT Cache | JVM Ahead-of-Time Cache |
+| AOT Cache + Spring Boot AOT | JVM AOT + Spring Boot AOT |
+
 ## How to optimize GIFs and PNGs in documentation folder
 
 \[**Medium**\] [**How I Reduce GIF and Screenshot Sizes for My Technical Articles on macOS**](https://medium.com/itnext/how-i-reduce-gif-and-screenshot-sizes-for-my-technical-articles-on-macos-7fea331afc68)

@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spring Boot Startup Optimization - Benchmark Charts</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800 min-h-screen p-6">
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <div class="bg-white rounded-xl p-5 mb-6 shadow-md flex flex-wrap items-center gap-6">
+            <h1 class="text-xl font-semibold text-gray-900">Benchmark Charts</h1>
+            <div class="flex items-center gap-3">
+                <input type="file" id="csvFile" accept=".csv" 
+                    class="px-3 py-2 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer text-sm hover:border-blue-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                <span id="validationStatus" class="px-4 py-2 rounded-md text-sm font-medium bg-orange-100 text-orange-700">Select a CSV file</span>
+            </div>
+        </div>
+
+        <div id="content">
+            <div class="text-center py-16 text-gray-500">
+                <div class="text-5xl mb-4 opacity-50">📁</div>
+                <p class="text-lg">Upload a CSV file to view benchmark charts</p>
+                <p class="text-sm mt-2 text-gray-400">File should match format: Section,Run,RSS,Time,Startup</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const EXPECTED_HEADER = 'Section,Run,RSS,Time,Startup';
+        let benchmarkData = null;
+
+        document.getElementById('csvFile').addEventListener('change', handleFileUpload);
+
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            const statusEl = document.getElementById('validationStatus');
+            const contentEl = document.getElementById('content');
+
+            if (!file) {
+                statusEl.textContent = 'No file selected';
+                statusEl.className = 'px-4 py-2 rounded-md text-sm font-medium bg-orange-100 text-orange-700';
+                contentEl.innerHTML = `
+                    <div class="text-center py-16 text-gray-500">
+                        <div class="text-5xl mb-4 opacity-50">📁</div>
+                        <p class="text-lg">Upload a CSV file to view benchmark charts</p>
+                        <p class="text-sm mt-2 text-gray-400">File should match format: Section,Run,RSS,Time,Startup</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const csvContent = e.target.result;
+                const lines = csvContent.split('\n').map(line => line.trim()).filter(line => line);
+
+                const header = lines[0];
+                if (header !== EXPECTED_HEADER) {
+                    statusEl.textContent = 'Invalid format';
+                    statusEl.className = 'px-4 py-2 rounded-md text-sm font-medium bg-red-100 text-red-700';
+                    return;
+                }
+
+                const data = parseCSV(lines.slice(1));
+                benchmarkData = data;
+
+                statusEl.textContent = 'Loaded (' + data.runs.length + ' runs)';
+                statusEl.className = 'px-4 py-2 rounded-md text-sm font-medium bg-green-100 text-green-700';
+
+                renderContent(data);
+            };
+            reader.readAsText(file);
+        }
+
+        function parseCSV(lines) {
+            const data = { runs: [], averages: null };
+            const runMap = new Map();
+            let avgData = [];
+
+            for (const line of lines) {
+                const parts = parseCSVLine(line);
+                if (parts.length < 5) continue;
+
+                const section = parts[0];
+                const run = parts[1];
+                const rss = parseRSS(parts[2]);
+                const time = parseTime(parts[3]);
+                const startup = parseFloat(parts[4]);
+
+                if (run === 'avg') {
+                    avgData.push({ section, rss, time, startup });
+                } else {
+                    const runNum = parseInt(run.replace('Run ', ''));
+                    if (!runMap.has(runNum)) runMap.set(runNum, []);
+                    runMap.get(runNum).push({ section, rss, time, startup });
+                }
+            }
+
+            data.runs = Array.from(runMap.keys()).sort((a, b) => a - b).map(num => ({
+                runNumber: num,
+                results: runMap.get(num)
+            }));
+            data.averages = avgData;
+
+            return data;
+        }
+
+        function parseCSVLine(line) {
+            const result = [];
+            let current = '';
+            let inQuotes = false;
+
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+                if (char === '"') {
+                    inQuotes = !inQuotes;
+                } else if (char === ',' && !inQuotes) {
+                    result.push(current.trim());
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+            result.push(current.trim());
+            return result;
+        }
+
+        function parseRSS(value) {
+            return parseInt(value.replace(/,/g, '')) || 0;
+        }
+
+        function parseTime(value) {
+            const parts = value.split(':');
+            if (parts.length === 2) {
+                return (parseInt(parts[0]) || 0) * 60 + (parseFloat(parts[1]) || 0);
+            }
+            return parseFloat(value) || 0;
+        }
+
+        function getSectionLabel(section) {
+            const labels = {
+                'Uber JAR': 'Uber JAR',
+                'Extracted executable JAR': 'Extracted JAR',
+                'CDS': 'CDS',
+                'AOT Cache': 'AOT Cache',
+                'AOT Cache + Spring Boot AOT': 'AOT + Spring AOT'
+            };
+            return labels[section] || section;
+        }
+
+        function renderContent(data) {
+            const contentEl = document.getElementById('content');
+            let html = '';
+            html += renderAveragesSection(data.averages);
+            data.runs.forEach(run => { html += renderRunSection(run); });
+            contentEl.innerHTML = html;
+            initCharts();
+        }
+
+        function renderAveragesSection(avgData) {
+            return `
+                <div class="bg-white rounded-xl p-6 mb-6 shadow-md" id="section-avg">
+                    <h2 class="text-lg font-semibold text-gray-900 mb-5 pb-3 border-b-2 border-gray-200">Averages (${benchmarkData.runs.length} runs)</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
+                        ${renderChart('startup', 'avg', 'Startup Time', avgData, 'startup')}
+                        ${renderChart('cpu', 'avg', 'CPU Time', avgData, 'cpu')}
+                        ${renderChart('memory', 'avg', 'Memory (RSS)', avgData, 'memory')}
+                    </div>
+                    ${renderTable(avgData, 'avg')}
+                    <p class="text-xs text-gray-500 text-center mt-2">Average values across ${benchmarkData.runs.length} runs per configuration</p>
+                </div>
+            `;
+        }
+
+        function renderRunSection(run) {
+            return `
+                <div class="bg-white rounded-xl p-6 mb-6 shadow-md" id="section-run${run.runNumber}">
+                    <h2 class="text-lg font-semibold text-gray-900 mb-5 pb-3 border-b-2 border-gray-200">Run ${run.runNumber}</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
+                        ${renderChart('startup', 'run' + run.runNumber, 'Startup Time', run.results, 'startup')}
+                        ${renderChart('cpu', 'run' + run.runNumber, 'CPU Time', run.results, 'cpu')}
+                        ${renderChart('memory', 'run' + run.runNumber, 'Memory (RSS)', run.results, 'memory')}
+                    </div>
+                    ${renderTable(run.results, 'run' + run.runNumber)}
+                </div>
+            `;
+        }
+
+        function renderChart(type, sectionId, title, data, metricKey) {
+            const canvasId = 'chart-' + type + '-' + sectionId;
+            return `
+                <div class="relative bg-gray-50 rounded-lg p-4 pt-10 group">
+                    <button class="absolute top-2 right-2 w-8 h-8 bg-white/90 border border-gray-200 rounded-md cursor-pointer flex items-center justify-center text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity z-10 hover:bg-blue-500 hover:text-white hover:border-blue-500" 
+                        onclick="downloadChart('${canvasId}', '${type}-${sectionId}')" title="Download PNG"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg></button>
+                    <div class="relative h-52">
+                        <canvas id="${canvasId}"></canvas>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderTable(data, sectionId) {
+            const tableId = 'table-' + sectionId;
+            const baseline = data.find(d => d.section === 'Uber JAR');
+            
+            const rows = data.map(d => {
+                const isBaseline = d.section === 'Uber JAR';
+                
+                const calcImprovement = (value, baseValue) => {
+                    if (isBaseline) return '';
+                    const pct = Math.abs(((value - baseValue) / baseValue) * 100);
+                    return '(↓' + pct.toFixed(1) + '%)';
+                };
+                
+                const rssImp = calcImprovement(d.rss, baseline.rss);
+                const cpuImp = calcImprovement(d.time, baseline.time);
+                const startupImp = calcImprovement(d.startup, baseline.startup);
+                
+                return `
+                    <tr class="${isBaseline ? '' : 'hover'}">
+                        <td class="p-2 pl-4 font-medium">${getSectionLabel(d.section)}</td>
+                        <td class="p-2 pl-4">${d.rss.toLocaleString()}<span class="${rssImp ? 'text-green-600 font-semibold ml-1' : ''}">${rssImp}</span></td>
+                        <td class="p-2 pl-4">${d.time.toFixed(2)}<span class="${cpuImp ? 'text-green-600 font-semibold ml-1' : ''}">${cpuImp}</span></td>
+                        <td class="p-2 pl-4">${d.startup.toFixed(3)}<span class="${startupImp ? 'text-green-600 font-semibold ml-1' : ''}">${startupImp}</span></td>
+                    </tr>
+                `;
+            }).join('');
+
+            return `
+                <div class="relative mt-2 group">
+                    <button class="absolute top-2 right-2 w-8 h-8 bg-white/90 border border-gray-200 rounded-md cursor-pointer flex items-center justify-center text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity z-10 hover:bg-blue-500 hover:text-white hover:border-blue-500" 
+                        onclick="downloadTable('${tableId}', 'table-${sectionId}', false)" title="Download PNG"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg></button>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm border-collapse" id="${tableId}">
+                            <thead>
+                                <tr class="bg-blue-500 text-white">
+                                    <th class="text-left p-3 pl-4">Configuration</th>
+                                    <th class="text-left p-3">RSS (KB)</th>
+                                    <th class="text-left p-3">CPU Time (s)</th>
+                                    <th class="text-left p-3 pr-4">Startup Time (s)</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                ${rows}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+
+        function initCharts() {
+            if (!benchmarkData) return;
+
+            renderChartData('startup', 'avg', benchmarkData.averages, 'startup');
+            renderChartData('cpu', 'avg', benchmarkData.averages, 'cpu');
+            renderChartData('memory', 'avg', benchmarkData.averages, 'memory');
+
+            benchmarkData.runs.forEach(run => {
+                renderChartData('startup', 'run' + run.runNumber, run.results, 'startup');
+                renderChartData('cpu', 'run' + run.runNumber, run.results, 'cpu');
+                renderChartData('memory', 'run' + run.runNumber, run.results, 'memory');
+            });
+        }
+
+        function renderChartData(type, sectionId, data, metricKey) {
+            const canvasId = 'chart-' + type + '-' + sectionId;
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+
+            const labels = data.map(d => getSectionLabel(d.section));
+            
+            let values, label, yLabel;
+            if (metricKey === 'startup') {
+                label = 'Startup Time (s)';
+                yLabel = 'Seconds';
+                values = data.map(d => d.startup);
+            } else if (metricKey === 'cpu') {
+                label = 'CPU Time (s)';
+                yLabel = 'Seconds';
+                values = data.map(d => d.time);
+            } else {
+                label = 'Memory RSS (KB)';
+                yLabel = 'KB';
+                values = data.map(d => d.rss);
+            }
+
+            const barColors = [
+                'rgba(74, 144, 217, 0.85)',
+                'rgba(99, 160, 222, 0.85)',
+                'rgba(125, 177, 227, 0.85)',
+                'rgba(150, 193, 232, 0.85)',
+                'rgba(176, 210, 237, 0.85)'
+            ];
+
+            const borderColors = [
+                'rgb(74, 144, 217)',
+                'rgb(99, 160, 222)',
+                'rgb(125, 177, 227)',
+                'rgb(150, 193, 232)',
+                'rgb(176, 210, 237)'
+            ];
+
+            new Chart(canvas, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: label,
+                        data: values,
+                        backgroundColor: barColors.slice(0, data.length),
+                        borderColor: borderColors.slice(0, data.length),
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        title: {
+                            display: true,
+                            text: label,
+                            font: { size: 14, weight: '600' },
+                            padding: { bottom: 12 }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: yLabel },
+                            grid: { color: 'rgba(0,0,0,0.06)' }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { font: { size: 11 } }
+                        }
+                    }
+                }
+            });
+        }
+
+        function downloadChart(canvasId, filename) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = canvas.width;
+            tempCanvas.height = canvas.height;
+            const tempCtx = tempCanvas.getContext('2d');
+            
+            tempCtx.fillStyle = 'white';
+            tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+            tempCtx.drawImage(canvas, 0, 0);
+
+            const link = document.createElement('a');
+            link.download = filename + '.png';
+            link.href = tempCanvas.toDataURL('image/png', 1.0);
+            link.click();
+        }
+
+        function downloadTable(tableId, filename, includeTitle) {
+            const tableEl = document.getElementById(tableId);
+            if (!tableEl) return;
+
+            const fontFamily = '-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif';
+            const headerHeight = 44;
+            const rowHeight = 36;
+            const cellPadX = 12;
+            const cellPadY = 8;
+            const scale = 2;
+            const borderWidth = 1;
+
+            const sections = tableEl.querySelectorAll('tbody tr');
+            const sectionTitle = document.querySelector('[id^="section-' + tableId.replace('table-', '') + '"] h2');
+            let titleText = (includeTitle !== false && sectionTitle) ? sectionTitle.textContent : '';
+            const titleHeight = titleText ? 36 : 0;
+
+            const rows = [];
+            sections.forEach(tr => {
+                const tds = tr.querySelectorAll('td');
+                rows.push(Array.from(tds).map(td => td.textContent.trim()));
+            });
+
+            const headerEls = tableEl.querySelectorAll('thead th');
+            const headers = Array.from(headerEls).map(th => th.textContent.trim());
+
+            const allCells = [headers, ...rows];
+            const numCols = headers.length;
+            const colWidths = allCells[0].map(() => 0);
+
+            const tempCanvas = document.createElement('canvas');
+            const tctx = tempCanvas.getContext('2d');
+
+            allCells.forEach(row => {
+                row.forEach((cell, ci) => {
+                    tctx.font = '500 12px ' + fontFamily;
+                    const w = tctx.measureText(cell).width + cellPadX * 2 + borderWidth;
+                    if (w > colWidths[ci]) colWidths[ci] = w;
+                });
+            });
+
+            tctx.font = '600 13px ' + fontFamily;
+            headers.forEach((h, ci) => {
+                const w = tctx.measureText(h).width + cellPadX * 2 + borderWidth;
+                if (w > colWidths[ci]) colWidths[ci] = w;
+            });
+
+            const totalWidth = colWidths.reduce((a, b) => a + b, 0);
+            const totalHeight = titleHeight + headerHeight + (rows.length * rowHeight) + 20;
+
+            const canvas = document.createElement('canvas');
+            canvas.width = totalWidth * scale;
+            canvas.height = totalHeight * scale;
+            const c = canvas.getContext('2d');
+            c.scale(scale, scale);
+
+            c.fillStyle = '#ffffff';
+            c.fillRect(0, 0, totalWidth, totalHeight);
+
+            if (titleText) {
+                c.fillStyle = '#374151';
+                c.font = '600 15px ' + fontFamily;
+                c.fillText(titleText, cellPadX, titleHeight * 0.7);
+            }
+
+            c.fillStyle = '#3b82f6';
+            c.fillRect(0, titleHeight, totalWidth, headerHeight);
+
+            c.fillStyle = '#ffffff';
+            c.font = '600 13px ' + fontFamily;
+            let x = 0;
+            headers.forEach((h, ci) => {
+                c.fillText(h, x + cellPadX, titleHeight + headerHeight * 0.65);
+                x += colWidths[ci];
+            });
+
+            const drawCell = (text, xi, yi, fill, bold) => {
+                c.fillStyle = fill;
+                c.font = (bold ? '600 ' : '500 ') + '12px ' + fontFamily;
+                c.fillText(text, xi + cellPadX, yi);
+            };
+
+            c.strokeStyle = '#e5e7eb';
+            c.lineWidth = borderWidth;
+
+            rows.forEach((row, ri) => {
+                const rowY = titleHeight + headerHeight + (ri * rowHeight);
+                c.beginPath();
+                c.moveTo(0, rowY);
+                c.lineTo(totalWidth, rowY);
+                c.stroke();
+
+                x = 0;
+                row.forEach((cell, ci) => {
+                    const match = cell.match(/^(.+?)((\(↓[\d.]+%\)))$/);
+                    if (match) {
+                        drawCell(match[1], x, rowY + rowHeight * 0.65, '#374151', false);
+                        drawCell(match[2], x + c.measureText(match[1]).width + 2, rowY + rowHeight * 0.65, '#16a34a', true);
+                    } else {
+                        drawCell(cell, x, rowY + rowHeight * 0.65, '#374151', false);
+                    }
+                    x += colWidths[ci];
+                });
+            });
+
+            const link = document.createElement('a');
+            link.download = filename + '.png';
+            link.href = canvas.toDataURL('image/png', 1.0);
+            link.click();
+        }
+    </script>
+</body>
+</html>
