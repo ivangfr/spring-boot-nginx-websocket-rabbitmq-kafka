@@ -13,7 +13,7 @@ Reference:
 
 ```bash
 export JAVA_JAR_COMMAND="java -jar news-app/target/news-app-1.0.0.jar"
-./collect-rss-cputime-startup.sh
+./collect-metrics.sh
 ```
 
 ## Extracted executable JAR
@@ -24,7 +24,7 @@ java -Djarmode=tools -jar news-app/target/news-app-1.0.0.jar extract --destinati
 
 ```bash
 export JAVA_JAR_COMMAND="java -jar extracted/news-app-1.0.0.jar"
-./collect-rss-cputime-startup.sh
+./collect-metrics.sh
 ```
 
 ## CDS
@@ -35,7 +35,7 @@ java -XX:ArchiveClassesAtExit=extracted/application.jsa -Dspring.context.exit=on
 
 ```bash
 export JAVA_JAR_COMMAND="java -XX:SharedArchiveFile=extracted/application.jsa -jar extracted/news-app-1.0.0.jar"
-./collect-rss-cputime-startup.sh
+./collect-metrics.sh
 ```
 
 ## AOT Cache
@@ -46,7 +46,7 @@ java -XX:AOTCacheOutput=extracted/app.aot -Dspring.context.exit=onRefresh -jar e
 
 ```bash
 export JAVA_JAR_COMMAND="java -XX:AOTCache=extracted/app.aot -jar extracted/news-app-1.0.0.jar"
-./collect-rss-cputime-startup.sh
+./collect-metrics.sh
 ```
 
 ## AOT Cache + Spring Boot AOT
@@ -65,5 +65,5 @@ java -XX:AOTCacheOutput=extracted-spring-aot/app.aot -Dspring.context.exit=onRef
 
 ```bash
 export JAVA_JAR_COMMAND="java -XX:AOTCache=extracted-spring-aot/app.aot -Dspring.aot.enabled=true -jar extracted-spring-aot/news-app-1.0.0.jar"
-./collect-rss-cputime-startup.sh
+./collect-metrics.sh
 ```

@@ -52,6 +52,7 @@ For a detailed explanation, check out the [**Medium article**](https://medium.co
 
 - [`Java 25`](https://www.oracle.com/java/technologies/downloads/#java25) or higher;
 - A containerization tool (e.g., [`Docker`](https://www.docker.com), [`Podman`](https://podman.io), etc.)
+- [`Bash 4.0`](https://www.gnu.org/software/bash/) or higher (macOS ships with Bash 3.2; install via `brew install bash`)
 
 ## Build News App Docker Image
 
@@ -176,10 +177,10 @@ This project includes tools to benchmark and compare different Spring Boot optim
 
 ### Scripts
 
-- **`collect-rss-cputime-startup.sh`** — Starts the app and measures RSS memory, CPU time, and startup time.
+- **`collect-metrics.sh`** — Starts the app and measures RSS memory, CPU time, startup time (via "Started" log), and time to ready (via `/actuator/health` returning HTTP 200).
   ```bash
   export JAVA_JAR_COMMAND="java -jar news-app/target/news-app-1.0.0.jar"
-  ./collect-rss-cputime-startup.sh
+  ./collect-metrics.sh
   ```
 
 - **`benchmark.sh`** — Runs automated benchmarks comparing 5 configurations. Outputs a CSV file.

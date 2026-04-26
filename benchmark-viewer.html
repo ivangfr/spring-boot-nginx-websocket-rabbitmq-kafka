@@ -27,13 +27,13 @@
             <div class="text-center py-16 text-gray-500">
                 <div class="text-5xl mb-4 opacity-50">📁</div>
                 <p class="text-lg">Upload a CSV file to view benchmark charts</p>
-                <p class="text-sm mt-2 text-gray-400">File should match format: Section,Run,RSS,Time,Startup</p>
+                <p class="text-sm mt-2 text-gray-400">File should match format: Section,Run,RSS,Time,Startup,TimeToReady</p>
             </div>
         </div>
     </div>
 
     <script>
-        const EXPECTED_HEADER = 'Section,Run,RSS,Time,Startup';
+        const EXPECTED_HEADER = 'Section,Run,RSS,Time,Startup,TimeToReady';
         let benchmarkData = null;
 
         document.getElementById('csvFile').addEventListener('change', handleFileUpload);
@@ -50,7 +50,7 @@
                     <div class="text-center py-16 text-gray-500">
                         <div class="text-5xl mb-4 opacity-50">📁</div>
                         <p class="text-lg">Upload a CSV file to view benchmark charts</p>
-                        <p class="text-sm mt-2 text-gray-400">File should match format: Section,Run,RSS,Time,Startup</p>
+                        <p class="text-sm mt-2 text-gray-400">File should match format: Section,Run,RSS,Time,Startup,TimeToReady</p>
                     </div>
                 `;
                 return;
@@ -86,20 +86,21 @@
 
             for (const line of lines) {
                 const parts = parseCSVLine(line);
-                if (parts.length < 5) continue;
+                if (parts.length < 6) continue;
 
                 const section = parts[0];
                 const run = parts[1];
                 const rss = parseRSS(parts[2]);
                 const time = parseTime(parts[3]);
                 const startup = parseFloat(parts[4]);
+                const ready = parseFloat(parts[5]);
 
                 if (run === 'avg') {
-                    avgData.push({ section, rss, time, startup });
+                    avgData.push({ section, rss, time, startup, ready });
                 } else {
                     const runNum = parseInt(run.replace('Run ', ''));
                     if (!runMap.has(runNum)) runMap.set(runNum, []);
-                    runMap.get(runNum).push({ section, rss, time, startup });
+                    runMap.get(runNum).push({ section, rss, time, startup, ready });
                 }
             }
 
@@ -168,10 +169,13 @@
             return `
                 <div class="bg-white rounded-xl p-6 mb-6 shadow-md" id="section-avg">
                     <h2 class="text-lg font-semibold text-gray-900 mb-5 pb-3 border-b-2 border-gray-200">Averages (${benchmarkData.runs.length} runs)</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
-                        ${renderChart('startup', 'avg', 'Startup Time', avgData, 'startup')}
-                        ${renderChart('cpu', 'avg', 'CPU Time', avgData, 'cpu')}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                         ${renderChart('memory', 'avg', 'Memory (RSS)', avgData, 'memory')}
+                        ${renderChart('cpu', 'avg', 'CPU Time', avgData, 'cpu')}
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+                        ${renderChart('startup', 'avg', 'Startup Time', avgData, 'startup')}
+                        ${renderChart('ready', 'avg', 'Time to Ready (s)', avgData, 'ready')}
                     </div>
                     ${renderTable(avgData, 'avg')}
                     <p class="text-xs text-gray-500 text-center mt-2">Average values across ${benchmarkData.runs.length} runs per configuration</p>
@@ -183,10 +187,11 @@
             return `
                 <div class="bg-white rounded-xl p-6 mb-6 shadow-md" id="section-run${run.runNumber}">
                     <h2 class="text-lg font-semibold text-gray-900 mb-5 pb-3 border-b-2 border-gray-200">Run ${run.runNumber}</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
-                        ${renderChart('startup', 'run' + run.runNumber, 'Startup Time', run.results, 'startup')}
-                        ${renderChart('cpu', 'run' + run.runNumber, 'CPU Time', run.results, 'cpu')}
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-5">
                         ${renderChart('memory', 'run' + run.runNumber, 'Memory (RSS)', run.results, 'memory')}
+                        ${renderChart('cpu', 'run' + run.runNumber, 'CPU Time', run.results, 'cpu')}
+                        ${renderChart('startup', 'run' + run.runNumber, 'Startup Time', run.results, 'startup')}
+                        ${renderChart('ready', 'run' + run.runNumber, 'Time to Ready (s)', run.results, 'ready')}
                     </div>
                     ${renderTable(run.results, 'run' + run.runNumber)}
                 </div>
@@ -222,6 +227,7 @@
                 const rssImp = calcImprovement(d.rss, baseline.rss);
                 const cpuImp = calcImprovement(d.time, baseline.time);
                 const startupImp = calcImprovement(d.startup, baseline.startup);
+                const readyImp = calcImprovement(d.ready, baseline.ready);
                 
                 return `
                     <tr class="${isBaseline ? '' : 'hover'}">
@@ -229,6 +235,7 @@
                         <td class="p-2 pl-4">${d.rss.toLocaleString()}<span class="${rssImp ? 'text-green-600 font-semibold ml-1' : ''}">${rssImp}</span></td>
                         <td class="p-2 pl-4">${d.time.toFixed(2)}<span class="${cpuImp ? 'text-green-600 font-semibold ml-1' : ''}">${cpuImp}</span></td>
                         <td class="p-2 pl-4">${d.startup.toFixed(3)}<span class="${startupImp ? 'text-green-600 font-semibold ml-1' : ''}">${startupImp}</span></td>
+                        <td class="p-2 pl-4 pr-4">${d.ready.toFixed(3)}<span class="${readyImp ? 'text-green-600 font-semibold ml-1' : ''}">${readyImp}</span></td>
                     </tr>
                 `;
             }).join('');
@@ -242,9 +249,10 @@
                             <thead>
                                 <tr class="bg-blue-500 text-white">
                                     <th class="text-left p-3 pl-4">Configuration</th>
-                                    <th class="text-left p-3">RSS (KB)</th>
+                                    <th class="text-left p-3">Memory (RSS)</th>
                                     <th class="text-left p-3">CPU Time (s)</th>
-                                    <th class="text-left p-3 pr-4">Startup Time (s)</th>
+                                    <th class="text-left p-3">Startup Time (s)</th>
+                                    <th class="text-left p-3 pr-4">Time to Ready (s)</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-200">
@@ -259,14 +267,16 @@
         function initCharts() {
             if (!benchmarkData) return;
 
-            renderChartData('startup', 'avg', benchmarkData.averages, 'startup');
-            renderChartData('cpu', 'avg', benchmarkData.averages, 'cpu');
             renderChartData('memory', 'avg', benchmarkData.averages, 'memory');
+            renderChartData('cpu', 'avg', benchmarkData.averages, 'cpu');
+            renderChartData('startup', 'avg', benchmarkData.averages, 'startup');
+            renderChartData('ready', 'avg', benchmarkData.averages, 'ready');
 
             benchmarkData.runs.forEach(run => {
-                renderChartData('startup', 'run' + run.runNumber, run.results, 'startup');
-                renderChartData('cpu', 'run' + run.runNumber, run.results, 'cpu');
                 renderChartData('memory', 'run' + run.runNumber, run.results, 'memory');
+                renderChartData('cpu', 'run' + run.runNumber, run.results, 'cpu');
+                renderChartData('startup', 'run' + run.runNumber, run.results, 'startup');
+                renderChartData('ready', 'run' + run.runNumber, run.results, 'ready');
             });
         }
 
@@ -286,27 +296,89 @@
                 label = 'CPU Time (s)';
                 yLabel = 'Seconds';
                 values = data.map(d => d.time);
+            } else if (metricKey === 'ready') {
+                label = 'Time to Ready (s)';
+                yLabel = 'Seconds';
+                values = data.map(d => d.ready);
             } else {
                 label = 'Memory RSS (KB)';
                 yLabel = 'KB';
                 values = data.map(d => d.rss);
             }
 
-            const barColors = [
-                'rgba(74, 144, 217, 0.85)',
-                'rgba(99, 160, 222, 0.85)',
-                'rgba(125, 177, 227, 0.85)',
-                'rgba(150, 193, 232, 0.85)',
-                'rgba(176, 210, 237, 0.85)'
-            ];
+            const metricColors = {
+                memory: {  // Blue
+                    bar: [
+                        'rgba(59,130,246, 0.70)',
+                        'rgba(59,130,246, 0.80)',
+                        'rgba(59,130,246, 0.88)',
+                        'rgba(59,130,246, 0.95)',
+                        'rgba(59,130,246, 1.00)'
+                    ],
+                    border: [
+                        'rgb(59,130,246)',
+                        'rgb(59,130,246)',
+                        'rgb(59,130,246)',
+                        'rgb(59,130,246)',
+                        'rgb(59,130,246)'
+                    ]
+                },
+                cpu: {  // Red
+                    bar: [
+                        'rgba(239,68,68, 0.70)',
+                        'rgba(239,68,68, 0.80)',
+                        'rgba(239,68,68, 0.88)',
+                        'rgba(239,68,68, 0.95)',
+                        'rgba(239,68,68, 1.00)'
+                    ],
+                    border: [
+                        'rgb(239,68,68)',
+                        'rgb(239,68,68)',
+                        'rgb(239,68,68)',
+                        'rgb(239,68,68)',
+                        'rgb(239,68,68)'
+                    ]
+                },
+                startup: {  // Green
+                    bar: [
+                        'rgba(22,163,74, 0.70)',
+                        'rgba(22,163,74, 0.80)',
+                        'rgba(22,163,74, 0.88)',
+                        'rgba(22,163,74, 0.95)',
+                        'rgba(22,163,74, 1.00)'
+                    ],
+                    border: [
+                        'rgb(22,163,74)',
+                        'rgb(22,163,74)',
+                        'rgb(22,163,74)',
+                        'rgb(22,163,74)',
+                        'rgb(22,163,74)'
+                    ]
+                },
+                ready: {  // Purple
+                    bar: [
+                        'rgba(147,51,234, 0.70)',
+                        'rgba(147,51,234, 0.80)',
+                        'rgba(147,51,234, 0.88)',
+                        'rgba(147,51,234, 0.95)',
+                        'rgba(147,51,234, 1.00)'
+                    ],
+                    border: [
+                        'rgb(147,51,234)',
+                        'rgb(147,51,234)',
+                        'rgb(147,51,234)',
+                        'rgb(147,51,234)',
+                        'rgb(147,51,234)'
+                    ]
+                }
+            };
 
-            const borderColors = [
-                'rgb(74, 144, 217)',
-                'rgb(99, 160, 222)',
-                'rgb(125, 177, 227)',
-                'rgb(150, 193, 232)',
-                'rgb(176, 210, 237)'
-            ];
+            const colors = metricColors[metricKey] || metricColors.memory;
+            const barColors = colors.bar;
+            const borderColors = colors.border;
+
+            const maxValue = Math.max(...values);
+            const minValue = Math.min(...values);
 
             new Chart(canvas, {
                 type: 'bar',
@@ -318,7 +390,30 @@
                         backgroundColor: barColors.slice(0, data.length),
                         borderColor: borderColors.slice(0, data.length),
                         borderWidth: 1,
-                        borderRadius: 4
+                        borderRadius: 4,
+                        order: 2
+                    },
+                    {
+                        type: 'line',
+                        label: 'Max',
+                        data: Array(labels.length).fill(maxValue),
+                        borderColor: '#000000',
+                        borderWidth: 1,
+                        borderDash: [6, 4],
+                        pointRadius: 0,
+                        fill: false,
+                        order: 1
+                    },
+                    {
+                        type: 'line',
+                        label: 'Min',
+                        data: Array(labels.length).fill(minValue),
+                        borderColor: '#000000',
+                        borderWidth: 1,
+                        borderDash: [6, 4],
+                        pointRadius: 0,
+                        fill: false,
+                        order: 1
                     }]
                 },
                 options: {
