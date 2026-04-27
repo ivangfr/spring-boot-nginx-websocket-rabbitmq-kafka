@@ -3,7 +3,7 @@
 NUM_RUNS=${1:-3}
 TIMESTAMP=$(date +"%Y-%m-%d-%H%M%S")
 OUTPUT_CSV="results-$TIMESTAMP.csv"
-SECTIONS_LIST=("Uber JAR" "Extracted executable JAR" "CDS" "AOT Cache" "AOT Cache + Spring Boot AOT")
+SECTIONS_LIST=("Uber JAR" "Extracted JAR" "CDS" "AOT Cache" "AOT Cache + Spring AOT")
 TOTAL_SECTIONS=${#SECTIONS_LIST[@]}
 TOTAL_RUNS=$((NUM_RUNS * TOTAL_SECTIONS))
 
@@ -74,10 +74,10 @@ run_aot_cache_spring_aot() {
 
 declare -A SECTIONS=(
   ["Uber JAR"]="run_uber_jar"
-  ["Extracted executable JAR"]="run_self_extracting"
+  ["Extracted JAR"]="run_self_extracting"
   ["CDS"]="run_cds"
   ["AOT Cache"]="run_aot_cache"
-  ["AOT Cache + Spring Boot AOT"]="run_aot_cache_spring_aot"
+  ["AOT Cache + Spring AOT"]="run_aot_cache_spring_aot"
 )
 
 echo "Starting benchmark: $NUM_RUNS runs x $TOTAL_SECTIONS sections = $TOTAL_RUNS total executions"

@@ -16,7 +16,7 @@ export JAVA_JAR_COMMAND="java -jar news-app/target/news-app-1.0.0.jar"
 ./collect-metrics.sh
 ```
 
-## Extracted executable JAR
+## Extracted JAR
 
 ```bash
 java -Djarmode=tools -jar news-app/target/news-app-1.0.0.jar extract --destination extracted
@@ -49,7 +49,7 @@ export JAVA_JAR_COMMAND="java -XX:AOTCache=extracted/app.aot -jar extracted/news
 ./collect-metrics.sh
 ```
 
-## AOT Cache + Spring Boot AOT
+## AOT Cache + Spring AOT
 
 ```bash
 ./mvnw clean -Pnative package --projects news-app

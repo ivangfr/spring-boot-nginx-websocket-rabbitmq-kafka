@@ -197,10 +197,10 @@ This project includes tools to benchmark and compare different Spring Boot optim
 | Configuration | Description |
 |---------------|-------------|
 | Uber JAR | Standard executable JAR |
-| Extracted executable JAR | Self-extracting JAR |
+| Extracted JAR | Self-extracting JAR |
 | CDS | Class Data Sharing |
 | AOT Cache | JVM Ahead-of-Time Cache |
-| AOT Cache + Spring Boot AOT | JVM AOT + Spring Boot AOT |
+| AOT Cache + Spring AOT | JVM AOT + Spring AOT |
 
 ## How to optimize GIFs and PNGs in documentation folder
 
