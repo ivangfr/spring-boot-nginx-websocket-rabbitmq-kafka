@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -e
 
 DOCKER_IMAGE_PREFIX="ivanfranchin"
 APP_NAME="news-app"
