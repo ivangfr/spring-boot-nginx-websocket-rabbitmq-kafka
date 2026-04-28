@@ -12,6 +12,7 @@ On [ivangfr.github.io](https://ivangfr.github.io), I have compiled my Proof-of-C
 ## Additional Readings
 
 - \[**Medium**\] [**Implementing an Interactive and Scalable News Broadcasting App**](https://medium.com/@ivangfr/implementing-an-interactive-and-scalable-news-broadcasting-app-333aa06ee2cd)
+- \[**Medium**\] [**Optimizing Spring Boot: App Ready 50% Faster, 48% Less CPU, 16% Less Memory — Zero Code Changes**](https://medium.com/@ivangfr/optimizing-spring-boot-app-ready-50-faster-48-less-cpu-16-less-memory-zero-code-changes-de15a12fb398)
 
 ## Application
 
@@ -154,6 +155,18 @@ To stop and remove Docker Compose containers, network, and volumes, go to a term
 podman compose down -v
 ```
 
+## Running Integration Tests
+
+Run the integration tests from the project root:
+
+```bash
+./mvnw verify --projects news-app
+```
+
+## Running Benchmarks
+
+For a step-by-step guide on running benchmarks, see [BENCHMARKING.md](BENCHMARKING.md).
+
 ## Cleanup
 
 - To remove the Docker images created by this project, go to a terminal and, inside the `spring-boot-nginx-websocket-rabbitmq-kafka` root folder, run the script below:
@@ -165,42 +178,6 @@ podman compose down -v
   ```text
   127.0.0.1 news-app.lb
   ```
-
-## Startup Benchmarking
-
-This project includes tools to benchmark and compare different Spring Boot optimization techniques.
-
-> **Prerequisite**: Start the required Docker Compose services:
-> ```bash
-> podman compose up -d zookeeper kafka rabbitmq postgres
-> ```
-
-### Scripts
-
-- **`collect-metrics.sh`** — Starts the app and measures RSS memory, CPU time, startup time (via "Started" log), and time to ready (via `/actuator/health` returning HTTP 200).
-  ```bash
-  export JAVA_JAR_COMMAND="java -jar news-app/target/news-app-1.0.0.jar"
-  ./collect-metrics.sh
-  ```
-
-- **`benchmark.sh`** — Runs automated benchmarks comparing 5 configurations. Outputs a CSV file.
-  ```bash
-  ./benchmark.sh 3  # 3 runs per configuration
-  ```
-
-- **`benchmark-viewer.html`** — HTML viewer with charts to visualize CSV results. Open in a browser.
-
-- **`manual-steps.md`** — Reference guide with manual commands for each configuration.
-
-### Configurations Tested
-
-| Configuration | Description |
-|---------------|-------------|
-| Uber JAR | Standard executable JAR |
-| Extracted JAR | Self-extracting JAR |
-| CDS | Class Data Sharing |
-| AOT Cache | JVM Ahead-of-Time Cache |
-| AOT Cache + Spring AOT | JVM AOT + Spring AOT |
 
 ## How to optimize GIFs and PNGs in documentation folder
 
