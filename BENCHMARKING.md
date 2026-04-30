@@ -95,10 +95,10 @@ For the exact commands needed to prepare and run each of the 5 configurations in
 
 ## Viewing Results
 
-Open `benchmark-viewer.html` in a browser:
+Open `benchmark-viewer/index.html` in a browser:
 
 ```bash
-open benchmark-viewer.html
+open benchmark-viewer/index.html
 ```
 
 Then load the generated CSV file (e.g. `results-2025-01-01-120000.csv`) using the file picker in the viewer. Charts will display average RSS, CPU time, startup time, and time to ready across all configurations.
