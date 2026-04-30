@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 
 NUM_RUNS=${1:-3}
+
+if ! [[ "$NUM_RUNS" =~ ^[0-9]+$ ]] || [ "$NUM_RUNS" -lt 1 ]; then
+  echo "Error: NUM_RUNS must be a positive integer"
+  exit 1
+fi
+
 TIMESTAMP=$(date +"%Y-%m-%d-%H%M%S")
 OUTPUT_CSV="results-$TIMESTAMP.csv"
 SECTIONS_LIST=("Uber JAR" "Extracted JAR" "CDS" "AOT Cache" "AOT Cache + Spring AOT")
@@ -8,11 +14,12 @@ TOTAL_SECTIONS=${#SECTIONS_LIST[@]}
 TOTAL_RUNS=$((NUM_RUNS * TOTAL_SECTIONS))
 
 cleanup_extracted() {
-  rm -rf extracted
+  [[ -d "extracted" ]] && rm -rf extracted
 }
 
 cleanup_all() {
-  rm -rf extracted extracted-spring-aot
+  [[ -d "extracted" ]] && rm -rf extracted
+  [[ -d "extracted-spring-aot" ]] && rm -rf extracted-spring-aot
 }
 
 check_port_8080() {
@@ -21,7 +28,7 @@ check_port_8080() {
     echo "Port 8080 is in use by process $EXISTING_PID. Kill it? (y/n)"
     read -r answer
     if [ "$answer" = "y" ] || [ "$answer" = "Y" ]; then
-      kill -9 "$EXISTING_PID" 2>/dev/null
+    kill -9 "$EXISTING_PID" 2>/dev/null
       sleep 1
     else
       echo "Aborting."

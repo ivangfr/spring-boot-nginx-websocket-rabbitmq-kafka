@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+if [ -z "$JAVA_JAR_COMMAND" ]; then
+  echo "Error: JAVA_JAR_COMMAND is not set"
+  exit 1
+fi
 
 URL="http://localhost:8080/actuator/health"
 LOG_FILE=$(mktemp)
@@ -35,5 +39,7 @@ STARTUP_TIME=$(grep "Started" "$LOG_FILE" | grep -oE 'in [0-9.]+ seconds' | grep
 echo "RSS,CPUTIME,STARTUP_TIME,TIME_TO_READY"
 echo "$RSS_CPUTIME,$STARTUP_TIME,$TIME_TO_READY"
 
+kill "$MY_PID" 2>/dev/null
+sleep 0.5
 kill -9 "$MY_PID" 2>/dev/null
 wait "$MY_PID" 2>/dev/null
