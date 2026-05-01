@@ -183,6 +183,22 @@ For a step-by-step guide on running benchmarks, see [BENCHMARKING.md](BENCHMARKI
 
 \[**Medium**\] [**How I Reduce GIF and Screenshot Sizes for My Technical Articles on macOS**](https://medium.com/itnext/how-i-reduce-gif-and-screenshot-sizes-for-my-technical-articles-on-macos-7fea331afc68)
 
+## Code Formatting
+
+Uses [Spotless Maven Plugin](https://github.com/diffplug/spotless/tree/main/plugin-maven) + [Google Java Format](https://github.com/google/google-java-format) (Java) and [Prettier](https://prettier.io/) (HTML) for automated formatting.
+
+- **Check formatting:**
+  ```bash
+  ./mvnw spotless:check
+  ```
+
+- **Auto-fix formatting:**
+  ```bash
+  ./mvnw spotless:apply
+  ```
+
+Formatting is enforced automatically during `./mvnw verify`.
+
 ## Support
 
 If you find this useful, consider buying me a coffee:
