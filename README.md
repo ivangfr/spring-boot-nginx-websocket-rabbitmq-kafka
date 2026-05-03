@@ -14,6 +14,63 @@ On [ivangfr.github.io](https://ivangfr.github.io), I have compiled my Proof-of-C
 - \[**Medium**\] [**Implementing an Interactive and Scalable News Broadcasting App**](https://medium.com/@ivangfr/implementing-an-interactive-and-scalable-news-broadcasting-app-333aa06ee2cd)
 - \[**Medium**\] [**Optimizing Spring Boot: App Ready 50% Faster, 48% Less CPU, 16% Less Memory — Zero Code Changes**](https://medium.com/@ivangfr/optimizing-spring-boot-app-ready-50-faster-48-less-cpu-16-less-memory-zero-code-changes-de15a12fb398)
 
+## Project Overview
+
+```mermaid
+flowchart TB
+    subgraph users ["Users"]
+        HTTP["REST Clients"]
+        Browser["Browser"]
+    end
+
+    subgraph infrastructure ["Infrastructure"]
+        Nginx["Nginx\nLoad Balancer"]
+
+        subgraph news-app ["news-app:8080\n(Spring Boot)"]
+            RestCtrl["NewsRestController\n(REST /api/news)"]
+            WsCtrl["ReactionWebsocketController\n(WebSocket /app/reaction)"]
+            EventCons["NewsEventConsumer\n(RabbitMQ → /topic/news)"]
+            ReactionCons["ReactionEventConsumer\n(Kafka → DB)"]
+        end
+
+        subgraph postgresql ["PostgreSQL"]
+            db[("news")]
+        end
+
+        subgraph rabbitmq ["RabbitMQ"]
+            Queue["news.events\n(queue)"]
+        end
+
+        subgraph kafka ["Kafka"]
+            Topic["reactions.events\n(topic)"]
+        end
+    end
+
+    Browser <-->|"WebSocket"| Nginx
+    Browser -->|"HTTP/REST API"| Nginx
+
+    HTTP -->|"HTTP/REST API"| Nginx
+
+    Nginx -->|"HTTP/REST"| RestCtrl
+    Nginx <-->|"WebSocket"| WsCtrl
+
+    RestCtrl -->|"creates"| db
+    RestCtrl -->|"publishes"| Queue
+
+    Queue -.->|"broadcast news"| EventCons
+    EventCons -.->|"/topic/news"| Nginx
+
+    WsCtrl -->|"publishes"| Topic
+    Topic -.->|"consumes"| ReactionCons
+    ReactionCons -->|"updates"| db
+```
+
+**Data Flow:**
+- **News Publishing:** `POST /api/news` → saves to PostgreSQL → broadcasts via RabbitMQ → WebSocket clients receive it
+- **Reactions:** Client reaction (via WebSocket) → sent to Kafka → processed in order → saved to PostgreSQL
+
+For a detailed explanation, check out the [**Medium article**](https://medium.com/@ivangfr/implementing-an-interactive-and-scalable-news-broadcasting-app-333aa06ee2cd).
+
 ## Application
 
 - ### news-app
@@ -27,27 +84,6 @@ On [ivangfr.github.io](https://ivangfr.github.io), I have compiled my Proof-of-C
   POST /api/news {"description": "..."}
    GET /actuator/health
   ```
-
-## Project Diagram
-
-![project-diagram](documentation/project-diagram.png)
-
-## Architecture
-
-This app uses an **event-driven architecture** with four main components:
-
-- **Client (Browser)** — connects via WebSocket for real-time updates and reactions
-- **Nginx** — load balancer distributing traffic across Spring Boot instances
-- **Spring Boot** — REST API for publishing news, WebSocket for broadcasting
-- **PostgreSQL** — stores news and reaction counts
-- **RabbitMQ** — broadcasts news to all clients in real-time
-- **Kafka** — processes reactions sequentially, partitioned by news ID
-
-**Data Flow:**
-- `POST /api/news` → saves to PostgreSQL → broadcasts via RabbitMQ → WebSocket clients receive it
-- Client reaction (via WebSocket) → sent to Kafka → processed in order → saved to PostgreSQL
-
-For a detailed explanation, check out the [**Medium article**](https://medium.com/@ivangfr/implementing-an-interactive-and-scalable-news-broadcasting-app-333aa06ee2cd).
 
 ## Prerequisites
 
@@ -179,7 +215,7 @@ For a step-by-step guide on running benchmarks, see [BENCHMARKING.md](BENCHMARKI
   127.0.0.1 news-app.lb
   ```
 
-## How to optimize GIFs and PNGs in documentation folder
+## How to optimize the GIF in the documentation folder
 
 \[**Medium**\] [**How I Reduce GIF and Screenshot Sizes for My Technical Articles on macOS**](https://medium.com/itnext/how-i-reduce-gif-and-screenshot-sizes-for-my-technical-articles-on-macos-7fea331afc68)
 

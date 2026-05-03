@@ -37,7 +37,6 @@
         <module>news-app</module>
     </modules>
     <build>
-        <pluginManagement>
             <plugins>
                 <plugin>
                     <groupId>com.diffplug.spotless</groupId>
@@ -80,6 +79,5 @@
                     </executions>
                 </plugin>
             </plugins>
-        </pluginManagement>
     </build>
 </project>
