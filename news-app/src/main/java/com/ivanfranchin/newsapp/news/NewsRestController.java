@@ -1,11 +1,15 @@
 package com.ivanfranchin.newsapp.news;
 
+import com.ivanfranchin.newsapp.news.dto.CreateNewsRequest;
+import com.ivanfranchin.newsapp.news.dto.NewsResponse;
+import com.ivanfranchin.newsapp.news.event.NewsEvent;
+import com.ivanfranchin.newsapp.news.model.News;
+import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
-
-import jakarta.validation.Valid;
-
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.function.cloudevent.CloudEventMessageBuilder;
 import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.http.HttpStatus;
@@ -16,14 +20,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-
-import com.ivanfranchin.newsapp.news.dto.CreateNewsRequest;
-import com.ivanfranchin.newsapp.news.dto.NewsResponse;
-import com.ivanfranchin.newsapp.news.event.NewsEvent;
-import com.ivanfranchin.newsapp.news.model.News;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RequiredArgsConstructor

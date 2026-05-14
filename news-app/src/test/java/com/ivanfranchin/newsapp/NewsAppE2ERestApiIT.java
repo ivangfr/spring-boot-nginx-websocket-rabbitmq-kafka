@@ -2,8 +2,8 @@ package com.ivanfranchin.newsapp;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.ivanfranchin.newsapp.news.dto.NewsResponse;
 import java.util.List;
-
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.resttestclient.TestRestTemplate;
@@ -14,8 +14,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
-
-import com.ivanfranchin.newsapp.news.dto.NewsResponse;
 
 @AutoConfigureTestRestTemplate
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)

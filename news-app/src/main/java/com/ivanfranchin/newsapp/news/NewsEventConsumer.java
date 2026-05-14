@@ -1,15 +1,12 @@
 package com.ivanfranchin.newsapp.news;
 
+import com.ivanfranchin.newsapp.news.event.NewsEvent;
 import java.util.function.Consumer;
-
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
-
-import com.ivanfranchin.newsapp.news.event.NewsEvent;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RequiredArgsConstructor

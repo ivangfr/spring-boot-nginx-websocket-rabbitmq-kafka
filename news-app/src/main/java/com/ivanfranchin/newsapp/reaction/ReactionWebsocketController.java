@@ -1,14 +1,12 @@
 package com.ivanfranchin.newsapp.reaction;
 
+import com.ivanfranchin.newsapp.reaction.event.ReactionEvent;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.function.cloudevent.CloudEventMessageBuilder;
 import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.stereotype.Controller;
-
-import com.ivanfranchin.newsapp.reaction.event.ReactionEvent;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RequiredArgsConstructor

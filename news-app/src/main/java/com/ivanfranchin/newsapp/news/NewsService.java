@@ -1,13 +1,10 @@
 package com.ivanfranchin.newsapp.news;
 
-import java.util.List;
-
-import org.springframework.stereotype.Service;
-
 import com.ivanfranchin.newsapp.news.exception.NewsNotFoundException;
 import com.ivanfranchin.newsapp.news.model.News;
-
+import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
 @RequiredArgsConstructor
 @Service
