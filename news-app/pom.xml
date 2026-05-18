@@ -10,7 +10,7 @@
     </parent>
     <artifactId>news-app</artifactId>
     <name>news-app</name>
-    <description>Demo project for Spring Boot</description>
+    <description/>
     <url/>
     <licenses>
         <license/>
