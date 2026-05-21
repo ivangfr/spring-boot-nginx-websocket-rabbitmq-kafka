@@ -215,10 +215,6 @@ For a step-by-step guide on running benchmarks, see [BENCHMARKING.md](BENCHMARKI
   127.0.0.1 news-app.lb
   ```
 
-## How to optimize the GIF in the documentation folder
-
-\[**Medium**\] [**How I Reduce GIF and Screenshot Sizes for My Technical Articles on macOS**](https://medium.com/itnext/how-i-reduce-gif-and-screenshot-sizes-for-my-technical-articles-on-macos-7fea331afc68)
-
 ## Code Formatting
 
 Uses [Spotless Maven Plugin](https://github.com/diffplug/spotless/tree/main/plugin-maven) + [Google Java Format](https://github.com/google/google-java-format) (Java) and [Prettier](https://prettier.io/) (HTML) for automated formatting.
@@ -234,6 +230,10 @@ Uses [Spotless Maven Plugin](https://github.com/diffplug/spotless/tree/main/plug
   ```
 
 Formatting is enforced automatically during `./mvnw verify`.
+
+## How to optimize the GIF in the documentation folder
+
+\[**Medium**\] [**How I Reduce GIF and Screenshot Sizes for My Technical Articles on macOS**](https://medium.com/itnext/how-i-reduce-gif-and-screenshot-sizes-for-my-technical-articles-on-macos-7fea331afc68)
 
 ## Support
 
