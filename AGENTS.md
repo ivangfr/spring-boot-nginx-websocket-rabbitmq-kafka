@@ -3,7 +3,7 @@
 ## Project Structure
 - Parent POM (Java 25, Spring Boot 4.0.6) with single `news-app` module
 - Event-driven architecture: WebSocket + RabbitMQ (broadcast) + Kafka (reactions by news ID) + PostgreSQL
-- Nginx load balances across 3 news-app instances (see `docker-compose.yml`)
+- Nginx load balances across 3 news-app instances (see `compose.yaml`)
 
 ## Commands
 ```bash
