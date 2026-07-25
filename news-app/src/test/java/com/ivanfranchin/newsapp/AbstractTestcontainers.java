@@ -13,7 +13,7 @@ import org.testcontainers.utility.DockerImageName;
 public abstract class AbstractTestcontainers {
 
   @Container
-  static PostgreSQLContainer postgreSQLContainer = new PostgreSQLContainer("postgres:18.0");
+  static PostgreSQLContainer postgreSQLContainer = new PostgreSQLContainer("postgres:18.4");
 
   @Container
   static RabbitMQContainer rabbitMQContainer = new RabbitMQContainer("rabbitmq:4.2.1-management");

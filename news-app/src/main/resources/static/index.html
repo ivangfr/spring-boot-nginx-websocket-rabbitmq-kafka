@@ -92,10 +92,10 @@
           function (error) {
             console.log(
               "WebSocket connection error or closed. Attempting to reconnect in 3 seconds",
-              error,
+              error
             );
             reconnectTimeout = setTimeout(connect, 1000);
-          },
+          }
         );
       }
 

@@ -69,7 +69,7 @@ services:
       retries: 5
 
   postgres:
-    image: 'postgres:18.0'
+    image: 'postgres:18.4'
     container_name: 'postgres'
     restart: 'unless-stopped'
     ports:
@@ -136,7 +136,7 @@ services:
       - 'POSTGRES_HOST=postgres'
 
   nginx:
-    image: 'nginx:1.29.8'
+    image: 'nginx:1.31.3'
     container_name: 'nginx'
     restart: 'unless-stopped'
     volumes:
