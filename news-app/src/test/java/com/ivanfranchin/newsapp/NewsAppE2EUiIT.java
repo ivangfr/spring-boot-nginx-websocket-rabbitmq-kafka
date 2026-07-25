@@ -11,24 +11,20 @@ import com.microsoft.playwright.Page;
 import com.microsoft.playwright.Playwright;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.resttestclient.TestRestTemplate;
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRestTemplate;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
 
-@Disabled
 @AutoConfigureTestRestTemplate
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
@@ -157,12 +153,8 @@ class NewsAppE2EUiIT extends AbstractTestcontainers {
   }
 
   private NewsResponse createNewsViaApi(String description) {
-    String requestBody = "{\"description\":\"" + description + "\"}";
-    HttpHeaders headers = new HttpHeaders();
-    headers.setContentType(MediaType.APPLICATION_JSON);
-
     return testRestTemplate.postForObject(
-        "/api/news", new HttpEntity<>(requestBody, headers), NewsResponse.class);
+        "/api/news", Map.of("description", description), NewsResponse.class);
   }
 
   private String newsSelector(String newsId) {
@@ -170,9 +162,9 @@ class NewsAppE2EUiIT extends AbstractTestcontainers {
   }
 
   private void awaitVisible(Page page, String selector) {
-    Awaitility.await()
-        .atMost(90, TimeUnit.SECONDS)
-        .pollInterval(2, TimeUnit.SECONDS)
+    Awaitility.await("News item not visible: " + selector)
+        .atMost(15, TimeUnit.SECONDS)
+        .pollInterval(1, TimeUnit.SECONDS)
         .until(
             () -> {
               try {
